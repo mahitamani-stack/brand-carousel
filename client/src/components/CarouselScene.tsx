@@ -37,8 +37,8 @@ function SceneController() {
   const fanContainerRef = useRef<THREE.Group>(null);
   const pageGroupsRef = useRef<THREE.Group[]>([]);
   const [isCarouselMode, setIsCarouselMode] = useState(false);
-  const targetScroll = useRef(0);
-  const currentScroll = useRef(0);
+  const scrollX = useRef(0);
+  const targetScrollX = useRef(0);
 
   useEffect(() => {
     const fanContainer = new THREE.Group();
@@ -217,75 +217,109 @@ function SceneController() {
     );
 
     // Final state: edge-on center with card wings
+    const N = pageGroups.length;
     const centerX = (N - 1) / 2;
 
     tl.to(pageGroups.map(g => g.position), {
-      x: (i) => (i - centerX) * 0.45,
-      z: (i) => Math.abs(i - centerX) * 0.2,
-      stagger: 0.05,
-      ease: "expo.out"
+      x: (i) => (i - centerX) * 0.35,
+      y: 0,
+      z: 0,
+      stagger: 0.02,
+      ease: "power3.out"
     }, "final");
 
     tl.to(pageGroups.map(g => g.rotation), {
       y: (i) => {
-        const rel = (i - centerX);
-        return (rel * -0.6) + (rel > 0 ? -0.8 : 0.8);
+        const rel = i - centerX;
+        const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
+        return rel > 0 ? -angle : angle;
       },
       x: 0,
       z: 0,
-      stagger: 0.05,
-      ease: "expo.out",
+      stagger: 0.02,
+      ease: "power3.out",
       onComplete: () => setIsCarouselMode(true)
     }, "final");
   }, [scene, camera]);
 
-  // Handle carousel scrolling with wheel listener
+  // Handle carousel scrolling with wheel and drag
   useEffect(() => {
     if (!isCarouselMode) return;
 
     const handleWheel = (e: WheelEvent) => {
-      targetScroll.current += e.deltaY * 0.002; // Adjust sensitivity
+      // Standardize horizontal scroll
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      targetScrollX.current -= delta * 0.001; // Adjust sensitivity
     };
+
+    // Add drag support
+    let isDragging = false;
+    let startX = 0;
+    const handleDown = (e: PointerEvent) => { isDragging = true; startX = e.clientX; };
+    const handleMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      targetScrollX.current += dx * 0.005;
+      startX = e.clientX;
+    };
+    const handleUp = () => { isDragging = false; };
+
     window.addEventListener('wheel', handleWheel);
-    return () => window.removeEventListener('wheel', handleWheel);
+    window.addEventListener('pointerdown', handleDown);
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('pointerdown', handleDown);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
   }, [isCarouselMode]);
 
-  // Update carousel positions with sway and interaction
-  useFrame((state, delta) => {
+  // Update carousel positions with blade effect
+  useFrame((state) => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
-    // 1. Smoothly interpolate the scroll (Lerp)
-    currentScroll.current += (targetScroll.current - currentScroll.current) * 0.1;
+    // 1. Smoothly interpolate scroll
+    scrollX.current += (targetScrollX.current - scrollX.current) * 0.1;
 
     const N = pageGroupsRef.current.length;
     const centerX = (N - 1) / 2;
 
     pageGroupsRef.current.forEach((group, i) => {
-      // Calculate position relative to the center, including the scroll
-      const relativePos = (i - centerX) + currentScroll.current;
+      // Calculate distance from viewport center
+      // relX = 0 means the card is perfectly in the middle
+      const relX = (i - centerX) + scrollX.current;
 
-      // --- POSITION ---
-      // Horizontal spread
-      group.position.x = relativePos * 0.45; 
-      // Slight V-curve depth (keeps edges further or closer)
-      group.position.z = Math.abs(relativePos) * 0.2;
+      // --- POSITION (Straight Horizontal Line) ---
+      group.position.x = relX * 0.35; // Tightly packed blades
+      group.position.z = 0; // Keep them on a flat line
+      group.position.y = 0;
 
-      // --- ROTATION (The Sideways Look) ---
-      // The multiplier 0.6 ensures that at the center (0), rotation is high.
-      // As relativePos increases, rotation decreases, showing the face.
-      const baseRotation = relativePos * -0.6; 
+      // --- ROTATION (The Blade Effect) ---
+      const dist = Math.abs(relX);
       
-      // To get that "edge-on" look in the center:
-      // We add a constant offset so the middle is ~90 degrees (1.57 rad)
-      group.rotation.y = baseRotation + (relativePos > 0 ? -0.8 : 0.8);
+      // We want 90 degrees (1.57 rad) at center, 40 degrees (0.7 rad) at edges
+      // We use an exponential decay so the "unfolding" happens smoothly
+      const baseAngle = 0.7; // The "Outer State" (approx 40 degrees)
+      const centerBonus = 0.87 * Math.exp(-dist * 0.5); // Adds extra rotation in the center
+      const finalAngle = baseAngle + centerBonus;
+
+      // Apply the rotation (Left cards face right, Right cards face left)
+      group.rotation.y = relX > 0 ? -finalAngle : finalAngle;
 
       // --- THE SWAYING MOTION ---
-      // We use the scroll velocity to tilt the cards on the Z axis
-      const velocity = (targetScroll.current - currentScroll.current);
-      group.rotation.z = velocity * 2.0 + (Math.sin(state.clock.elapsedTime + i) * 0.05);
+      // A: Sway based on movement speed (tilts the blades as you drag)
+      const velocity = (targetScrollX.current - scrollX.current);
+      const movementSway = velocity * 1.5;
       
-      // Subtle X-axis tilt based on position for a "weighted" feel
-      group.rotation.x = Math.abs(relativePos) * 0.05;
+      // B: Passive swaying (organic breathing)
+      const passiveSway = Math.sin(state.clock.elapsedTime * 1.5 + i * 0.5) * 0.03;
+      
+      group.rotation.z = movementSway + passiveSway;
+      
+      // Slight X-axis tilt for perspective
+      group.rotation.x = Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.02;
     });
   });
 
