@@ -37,10 +37,8 @@ function SceneController() {
   const fanContainerRef = useRef<THREE.Group>(null);
   const pageGroupsRef = useRef<THREE.Group[]>([]);
   const [isCarouselMode, setIsCarouselMode] = useState(false);
-  const scrollXRef = useRef(0);
-  const targetScrollXRef = useRef(0);
-  const scrollVelocityRef = useRef(0);
-  const isDraggingRef = useRef(false);
+  const targetScroll = useRef(0);
+  const currentScroll = useRef(0);
 
   useEffect(() => {
     const fanContainer = new THREE.Group();
@@ -221,93 +219,73 @@ function SceneController() {
     // Final state: edge-on center with card wings
     const centerX = (N - 1) / 2;
 
-    tl.to(
-      pageGroups.map(g => g.position),
-      {
-        x: (i: number) => (i - centerX) * 0.25, // Very tight horizontal spacing
-        z: (i: number) => Math.abs(i - centerX) * 0.5, // Pushes outer cards back
-        stagger: { amount: 0.8 },
-        ease: "power2.inOut",
-      },
-      "final"
-    );
+    tl.to(pageGroups.map(g => g.position), {
+      x: (i) => (i - centerX) * 0.45,
+      z: (i) => Math.abs(i - centerX) * 0.2,
+      stagger: 0.05,
+      ease: "expo.out"
+    }, "final");
 
-    tl.to(
-      pageGroups.map(g => g.rotation),
-      {
-        x: 0,
-        y: (i: number) => {
-            const diff = i - centerX;
-            // The "Edge-on" effect: 
-            // Cards on left of center: ~1.5 radians (90 deg)
-            // Cards on right of center: ~-1.5 radians (-90 deg)
-            // Adjust the 0.15 multiplier to control how much the wings face the user
-            return diff > 0 ? -1.5 + (diff * 0.15) : 1.5 + (diff * 0.15);
-        },
-        z: 0,
-        stagger: { amount: 0.8 },
-        ease: "power2.inOut",
-        onComplete: () => setIsCarouselMode(true)
+    tl.to(pageGroups.map(g => g.rotation), {
+      y: (i) => {
+        const rel = (i - centerX);
+        return (rel * -0.6) + (rel > 0 ? -0.8 : 0.8);
       },
-      "final"
-    );
+      x: 0,
+      z: 0,
+      stagger: 0.05,
+      ease: "expo.out",
+      onComplete: () => setIsCarouselMode(true)
+    }, "final");
   }, [scene, camera]);
 
-  // Handle carousel scrolling
+  // Handle carousel scrolling with wheel listener
   useEffect(() => {
     if (!isCarouselMode) return;
 
-    const handleMouseDown = (e: MouseEvent) => {
-      isDraggingRef.current = true;
-      const startX = e.pageX;
-      const startScrollX = targetScrollXRef.current;
-
-      const handleMouseMove = (e: MouseEvent) => {
-        if (!isDraggingRef.current) return;
-        const dx = (e.pageX - startX) * 0.015;
-        targetScrollXRef.current = startScrollX - dx;
-      };
-
-      const handleMouseUp = () => {
-        isDraggingRef.current = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    const handleWheel = (e: WheelEvent) => {
+      targetScroll.current += e.deltaY * 0.002; // Adjust sensitivity
     };
-
-    window.addEventListener('mousedown', handleMouseDown);
-    return () => window.removeEventListener('mousedown', handleMouseDown);
+    window.addEventListener('wheel', handleWheel);
+    return () => window.removeEventListener('wheel', handleWheel);
   }, [isCarouselMode]);
 
-  // Update carousel positions with swapping edge-on effect
-  useFrame(() => {
+  // Update carousel positions with sway and interaction
+  useFrame((state, delta) => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
+
+    // 1. Smoothly interpolate the scroll (Lerp)
+    currentScroll.current += (targetScroll.current - currentScroll.current) * 0.1;
 
     const N = pageGroupsRef.current.length;
     const centerX = (N - 1) / 2;
 
     pageGroupsRef.current.forEach((group, i) => {
-      // 1. Calculate relative position including scroll
-      const relX = (i - centerX) + (scrollXRef.current * 1.5); // Adjust 1.5 for scroll speed
+      // Calculate position relative to the center, including the scroll
+      const relativePos = (i - centerX) + currentScroll.current;
 
-      // 2. Position: Tight horizontal strip with a slight curve in Z
-      group.position.x = relX * 0.35; 
-      group.position.z = Math.abs(relX) * 0.4;
+      // --- POSITION ---
+      // Horizontal spread
+      group.position.x = relativePos * 0.45; 
+      // Slight V-curve depth (keeps edges further or closer)
+      group.position.z = Math.abs(relativePos) * 0.2;
 
-      // 3. Rotation: The "Swapping" motion
-      // As relX passes 0, the card "flips" its edge orientation
-      const baseRotation = relX > 0 ? -1.5 : 1.5;
+      // --- ROTATION (The Sideways Look) ---
+      // The multiplier 0.6 ensures that at the center (0), rotation is high.
+      // As relativePos increases, rotation decreases, showing the face.
+      const baseRotation = relativePos * -0.6; 
       
-      // This adds the "facing the viewer" tilt as they move to the sides
-      const tiltTowardViewer = relX * 0.12; 
-      
-      group.rotation.y = baseRotation + tiltTowardViewer;
+      // To get that "edge-on" look in the center:
+      // We add a constant offset so the middle is ~90 degrees (1.57 rad)
+      group.rotation.y = baseRotation + (relativePos > 0 ? -0.8 : 0.8);
 
-      // Optional: Add a slight "breathing" or tilt to X/Z for organic feel
-      group.rotation.x = Math.sin(Date.now() * 0.001 + i) * 0.02;
+      // --- THE SWAYING MOTION ---
+      // We use the scroll velocity to tilt the cards on the Z axis
+      const velocity = (targetScroll.current - currentScroll.current);
+      group.rotation.z = velocity * 2.0 + (Math.sin(state.clock.elapsedTime + i) * 0.05);
+      
+      // Subtle X-axis tilt based on position for a "weighted" feel
+      group.rotation.x = Math.abs(relativePos) * 0.05;
     });
   });
 
