@@ -218,33 +218,39 @@ function SceneController() {
       "<"
     );
 
-    const GAP = 0.5;
+    // Replace the final two tl.to() blocks with this:
+    const centerX = (N - 1) / 2;
+
     tl.to(
       pageGroups.map(g => g.position),
       {
-        x: (i: number) => (i - (N - 1) / 2) * GAP,
-        z: 0,
-        duration: 1.0,
-        stagger: { each: 0.02, from: 'center' },
-        ease: "power3.inOut",
+        x: (i: number) => (i - centerX) * 0.3, // Tighter overlap
+        z: (i: number) => -Math.abs(i - centerX) * 0.1, // Slight z-depth variation
+        stagger: {
+          amount: 0.5,
+          from: "start"
+        },
+        ease: "power2.out",
       },
-      "<"
+      "final-spread" // Label to sync these animations
     );
 
-    // Final shelf arrangement - cards arranged like book spines with gaps
-    // Cards stay flat (z rotation = 0) but are positioned with gaps so you can see between them
     tl.to(
       pageGroups.map(g => g.rotation),
       {
         x: 0,
-        y: 0,
+        y: (i: number) => (i - centerX) * 0.15, // Fanned/angled Y rotation
         z: 0,
-        duration: 1.0,
-        stagger: { each: 0.02, from: 'center' },
-        ease: "power3.out",
-        onComplete: () => setIsCarouselMode(true),
+        stagger: {
+          amount: 0.5,
+          from: "start"
+        },
+        ease: "power2.out",
+        onComplete: () => {
+          setIsCarouselMode(true); // Enable drag scrolling
+        }
       },
-      "<"
+      "final-spread"
     );
   }, [scene, camera]);
 
@@ -281,34 +287,22 @@ function SceneController() {
   useFrame(() => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
-    // Spring physics: stiffness 0.055, damping 0.80 → damping ratio ≈ 0.34 (underdamped → overshoot)
-    scrollVelocityRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.055;
-    scrollVelocityRef.current *= 0.80;
-    scrollXRef.current += scrollVelocityRef.current;
+    const N = pageGroupsRef.current.length;
+    const centerX = (N - 1) / 2;
 
-    const vel  = scrollVelocityRef.current;
-    const GAP  = 0.5;
-    // World-space half-width where the 90°→0° mapping saturates (matches approx viewport edge)
-    const MAX_R = 4.5;
-    const t = Date.now() * 0.001;
+    pageGroupsRef.current.forEach((group, i) => {
+      // Current base position relative to center
+      const basePos = i - centerX;
+      
+      // Update X position based on scroll
+      group.position.x = (basePos + scrollXRef.current) * 0.3;
+      
+      // Update Z position based on distance from center (v-shape)
+      group.position.z = -Math.abs(basePos + scrollXRef.current) * 0.1;
 
-    pageGroupsRef.current.forEach((grp, i) => {
-      const basePos = (i - (N - 1) / 2) * GAP;
-      const x = basePos + scrollXRef.current;
-      grp.position.x = x;
-
-      // Centre = spine (90°), edges = face-on (0°)
-      const norm  = Math.max(-1, Math.min(1, x / MAX_R));
-      grp.rotation.y = (1 - Math.abs(norm)) * (Math.PI / 2);
-
-      // Lean: all cards tilt slightly in the direction of travel
-      const lean = -vel * 0.06;
-      // Float: each card sways at its own phase, amplitude scales with scroll speed
-      const float = Math.sin(i * 0.65 + t * 1.8) * Math.min(0.05, Math.abs(vel) * 0.35);
-      grp.rotation.z = lean + float;
-
-      // Z-bob: subtle depth oscillation while scrolling
-      grp.position.z = Math.sin(i * 0.5 + t * 1.5) * Math.min(0.035, Math.abs(vel) * 0.25);
+      // Update Y Rotation to maintain fan perspective while scrolling
+      // This makes cards turn as they move across the view
+      group.rotation.y = (basePos + scrollXRef.current) * -0.3;
     });
   });
 
