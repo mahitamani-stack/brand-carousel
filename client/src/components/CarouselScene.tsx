@@ -32,31 +32,6 @@ const CARD_W = 1.2;
 const CARD_H = 1.7;
 const CARD_T = 0.015;
 
-// Cloudinary base URL
-const CLOUDINARY_URL = 'https://res.cloudinary.com/c-a0a9fcac13d1a2f0381cf7eefc5fa8/image/upload/v1/logos/';
-
-async function loadTexture(filename: string): Promise<THREE.Texture> {
-  return new Promise((resolve) => {
-    const textureLoader = new THREE.TextureLoader();
-    const url = `${CLOUDINARY_URL}${filename}`;
-    textureLoader.load(url, (texture) => {
-      texture.flipY = true;
-      resolve(texture);
-    }, undefined, () => {
-      // Fallback: white texture if load fails
-      const canvas = document.createElement('canvas');
-      canvas.width = 600;
-      canvas.height = 840;
-      const ctx = canvas.getContext('2d')!;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, 600, 840);
-      const fallbackTex = new THREE.CanvasTexture(canvas);
-      fallbackTex.flipY = true;
-      resolve(fallbackTex);
-    });
-  });
-}
-
 function SceneController() {
   const { scene, camera } = useThree();
   const fanContainerRef = useRef<THREE.Group>(null);
@@ -73,161 +48,168 @@ function SceneController() {
     fanContainerRef.current = fanContainer;
 
     const pageGroups: THREE.Group[] = [];
-    const texturePromises: Promise<THREE.Texture>[] = [];
+    const textureLoader = new THREE.TextureLoader();
 
-    // Pre-load all textures
+    // Create page groups with meshes
     for (let i = 0; i < N; i++) {
       const brand = BRANDS[i];
-      texturePromises.push(loadTexture(brand.file));
+      
+      // Load texture from local logos folder
+      const logoUrl = `/logos/${brand.file}`;
+
+      // Create materials first (will update when textures load)
+      const frontMat = new THREE.MeshStandardMaterial({
+        transparent: true,
+        side: THREE.FrontSide,
+        color: 0xffffff,
+      });
+      
+      const backMat = new THREE.MeshStandardMaterial({
+        transparent: true,
+        side: THREE.BackSide,
+        color: 0xffffff,
+      });
+      
+      const sideMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        transparent: true,
+      });
+
+      // Load front texture and update material when ready
+      textureLoader.load(logoUrl, (texture) => {
+        texture.flipY = true;
+        frontMat.map = texture;
+        frontMat.needsUpdate = true;
+      });
+
+      // Load back texture and update material when ready
+      textureLoader.load(logoUrl, (texture) => {
+        texture.flipY = true;
+        backMat.map = texture;
+        backMat.needsUpdate = true;
+      });
+
+      // Create geometry and mesh
+      const geometry = new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T);
+      const materials = [sideMat, sideMat, sideMat, sideMat, frontMat, backMat];
+      const mesh = new THREE.Mesh(geometry, materials);
+      mesh.position.x = CARD_W / 2;
+
+      // Create group with proper pivot
+      const grp = new THREE.Group();
+      grp.position.z = (N - i) * 0.02;
+      grp.add(mesh);
+      fanContainer.add(grp);
+
+      pageGroups.push(grp);
     }
 
-    Promise.all(texturePromises).then((textures) => {
-      // Create page groups with meshes
-      for (let i = 0; i < N; i++) {
-        const texture = textures[i];
+    pageGroupsRef.current = pageGroups;
 
-        // Create materials - double-sided
-        const frontMat = new THREE.MeshStandardMaterial({
-          map: texture,
-          transparent: true,
-          opacity: 1,
-          side: THREE.FrontSide,
-        });
-        const backMat = new THREE.MeshStandardMaterial({
-          map: texture,
-          transparent: true,
-          opacity: 1,
-          side: THREE.BackSide,
-        });
-        const sideMat = new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 1,
-        });
+    // Run animation timeline
+    const tl = gsap.timeline();
+    const cameraState = { y: 0.15, z: 5.8 };
 
-        // Create geometry and mesh
-        const geometry = new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T);
-        const materials = [sideMat, sideMat, sideMat, sideMat, frontMat, backMat];
-        const mesh = new THREE.Mesh(geometry, materials);
-        mesh.position.x = CARD_W / 2;
+    // Phase 1: Reveal all cards
+    tl.to(pageGroups.map(g => g), { opacity: 1, duration: 0.6, stagger: 0.02 });
 
-        // Create group with proper pivot
-        const grp = new THREE.Group();
-        grp.position.z = (N - i) * 0.02;
-        grp.add(mesh);
-        fanContainer.add(grp);
+    // Phase 2: Fan open (rotate around Y-axis)
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: (i: number) => -(i / (N - 1)) * Math.PI * 0.85,
+        duration: 1.5,
+        ease: "back.out(1.5)",
+        stagger: 0.05,
+      },
+      "<"
+    );
 
-        pageGroups.push(grp);
+    // Phase 3: Camera moves up to 45-degree angle during spin
+    tl.to(
+      cameraState,
+      {
+        y: 2.2,
+        z: 3.8,
+        duration: 3.5,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          camera.position.y = cameraState.y;
+          camera.position.z = cameraState.z;
+          camera.lookAt(0, 0, 0);
+        },
+      },
+      "<"
+    );
+
+    // Spin around Y-axis
+    tl.to(
+      fanContainer.rotation,
+      {
+        y: Math.PI * 4,
+        duration: 3.5,
+        ease: "linear",
+      },
+      "<"
+    );
+
+    // Phase 4: Camera returns to center
+    tl.to(
+      cameraState,
+      {
+        y: 0.15,
+        z: 5.8,
+        duration: 1.2,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          camera.position.y = cameraState.y;
+          camera.position.z = cameraState.z;
+          camera.lookAt(0, 0, 0);
+        },
       }
+    );
 
-      pageGroupsRef.current = pageGroups;
+    // Collapse and unroll into horizontal strip
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: 0,
+        z: 0,
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'end' },
+        ease: "power2.inOut",
+      },
+      "<"
+    );
 
-      // Run animation timeline
-      const tl = gsap.timeline();
-      const cameraState = { y: 0.15, z: 5.8 };
+    const GAP = 0.5;
+    tl.to(
+      pageGroups.map(g => g.position),
+      {
+        x: (i: number) => (i - (N - 1) / 2) * GAP,
+        z: 0,
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'center' },
+        ease: "power3.inOut",
+      },
+      "<"
+    );
 
-      // Phase 1: Reveal all cards
-      tl.to(pageGroups.map(g => g), { opacity: 1, duration: 0.6, stagger: 0.02 });
-
-      // Phase 2: Fan open (rotate around Y-axis)
-      tl.to(
-        pageGroups.map(g => g.rotation),
-        {
-          y: (i: number) => -(i / (N - 1)) * Math.PI * 0.85,
-          duration: 1.5,
-          ease: "back.out(1.5)",
-          stagger: 0.05,
-        },
-        "<"
-      );
-
-      // Phase 3: Camera moves up to 45-degree angle during spin
-      tl.to(
-        cameraState,
-        {
-          y: 2.2,
-          z: 3.8,
-          duration: 3.5,
-          ease: "power2.inOut",
-          onUpdate: () => {
-            camera.position.y = cameraState.y;
-            camera.position.z = cameraState.z;
-            camera.lookAt(0, 0, 0);
-          },
-        },
-        "<"
-      );
-
-      // Spin around Y-axis
-      tl.to(
-        fanContainer.rotation,
-        {
-          y: Math.PI * 4,
-          duration: 3.5,
-          ease: "linear",
-        },
-        "<"
-      );
-
-      // Phase 4: Camera returns to center
-      tl.to(
-        cameraState,
-        {
-          y: 0.15,
-          z: 5.8,
-          duration: 1.2,
-          ease: "power2.inOut",
-          onUpdate: () => {
-            camera.position.y = cameraState.y;
-            camera.position.z = cameraState.z;
-            camera.lookAt(0, 0, 0);
-          },
-        }
-      );
-
-      // Collapse and unroll into horizontal strip
-      tl.to(
-        pageGroups.map(g => g.rotation),
-        {
-          y: 0,
-          z: 0,
-          duration: 1.0,
-          stagger: { each: 0.02, from: 'end' },
-          ease: "power2.inOut",
-        },
-        "<"
-      );
-
-      const GAP = 0.5;
-      tl.to(
-        pageGroups.map(g => g.position),
-        {
-          x: (i: number) => (i - (N - 1) / 2) * GAP,
-          z: 0,
-          duration: 1.0,
-          stagger: { each: 0.02, from: 'center' },
-          ease: "power3.inOut",
-        },
-        "<"
-      );
-
-      // Final shelf angle - cards rotated 90 degrees to face sideways (like book spines)
-      tl.to(
-        pageGroups.map(g => g.rotation),
-        {
-          y: (i: number) => {
-            const n = (i - (N - 1) / 2) / (N / 2);
-            return Math.PI / 2 + n * 0.3; // 90 degrees + slight variation
-          },
-          z: 0,
-          duration: 1.0,
-          stagger: { each: 0.02, from: 'center' },
-          ease: "power3.out",
-          onComplete: () => setIsCarouselMode(true),
-        },
-        "<"
-      );
-    });
+    // Final shelf arrangement - cards arranged like book spines with gaps
+    // Cards stay flat (z rotation = 0) but are positioned with gaps so you can see between them
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'center' },
+        ease: "power3.out",
+        onComplete: () => setIsCarouselMode(true),
+      },
+      "<"
+    );
   }, [scene, camera]);
 
   // Handle carousel scrolling
@@ -271,11 +253,8 @@ function SceneController() {
       const currentPos = basePos + scrollXRef.current;
 
       grp.position.x = currentPos;
-      
-      // Maintain sideways orientation with slight variation
-      const n = currentPos / 6;
-      grp.rotation.y = Math.PI / 2 + n * 0.3;
-      grp.position.z = -Math.abs(n) * 1.5;
+      grp.rotation.z = 0; // Keep cards flat
+      grp.position.z = 0; // No depth variation
     });
   });
 
