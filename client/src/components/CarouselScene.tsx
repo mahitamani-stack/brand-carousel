@@ -39,6 +39,7 @@ function SceneController() {
   const [isCarouselMode, setIsCarouselMode] = useState(false);
   const scrollXRef = useRef(0);
   const targetScrollXRef = useRef(0);
+  const scrollVelocityRef = useRef(0);
   const isDraggingRef = useRef(false);
 
   useEffect(() => {
@@ -66,6 +67,9 @@ function SceneController() {
 
       const front = makeFace();
       const back  = makeFace();
+      // Canvas textures must be tagged sRGB or Three.js linearises them → washed out
+      front.tex.colorSpace = THREE.SRGBColorSpace;
+      back.tex.colorSpace  = THREE.SRGBColorSpace;
 
       const img = new Image();
       img.onload = () => {
@@ -125,9 +129,11 @@ function SceneController() {
       inner.position.x = CARD_W / 2;
       inner.add(frontMesh, backMesh, edgeMesh);
 
-      // Outer group — this is what the animation drives
+      // Outer group — this is what the animation drives.
+      // All cards share z≈0 so the fan pivots from one common Z plane.
+      // A tiny unique offset prevents z-fighting while keeping them visually flush.
       const grp = new THREE.Group();
-      grp.position.z = (N - i) * 0.02;
+      grp.position.z = -i * 0.001;
       grp.add(inner);
       fanContainer.add(grp);
 
@@ -275,16 +281,34 @@ function SceneController() {
   useFrame(() => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
-    scrollXRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.12;
+    // Spring physics: stiffness 0.055, damping 0.80 → damping ratio ≈ 0.34 (underdamped → overshoot)
+    scrollVelocityRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.055;
+    scrollVelocityRef.current *= 0.80;
+    scrollXRef.current += scrollVelocityRef.current;
 
-    const GAP = 0.5;
+    const vel  = scrollVelocityRef.current;
+    const GAP  = 0.5;
+    // World-space half-width where the 90°→0° mapping saturates (matches approx viewport edge)
+    const MAX_R = 4.5;
+    const t = Date.now() * 0.001;
+
     pageGroupsRef.current.forEach((grp, i) => {
       const basePos = (i - (N - 1) / 2) * GAP;
-      const currentPos = basePos + scrollXRef.current;
+      const x = basePos + scrollXRef.current;
+      grp.position.x = x;
 
-      grp.position.x = currentPos;
-      grp.rotation.z = 0; // Keep cards flat
-      grp.position.z = 0; // No depth variation
+      // Centre = spine (90°), edges = face-on (0°)
+      const norm  = Math.max(-1, Math.min(1, x / MAX_R));
+      grp.rotation.y = (1 - Math.abs(norm)) * (Math.PI / 2);
+
+      // Lean: all cards tilt slightly in the direction of travel
+      const lean = -vel * 0.06;
+      // Float: each card sways at its own phase, amplitude scales with scroll speed
+      const float = Math.sin(i * 0.65 + t * 1.8) * Math.min(0.05, Math.abs(vel) * 0.35);
+      grp.rotation.z = lean + float;
+
+      // Z-bob: subtle depth oscillation while scrolling
+      grp.position.z = Math.sin(i * 0.5 + t * 1.5) * Math.min(0.035, Math.abs(vel) * 0.25);
     });
   });
 
