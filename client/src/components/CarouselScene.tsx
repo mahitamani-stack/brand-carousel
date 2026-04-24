@@ -151,7 +151,7 @@ function SceneController() {
     tl.to(
       pageGroups.map(g => g.rotation),
       {
-        y: (i: number) => -(i / (N - 1)) * Math.PI * 0.85,
+        y: function(index: number) { return -(index / (N - 1)) * Math.PI * 0.85; },
         duration: 1.5,
         ease: "back.out(1.5)",
         stagger: 0.05,
@@ -220,26 +220,34 @@ function SceneController() {
     const N = pageGroups.length;
     const centerX = (N - 1) / 2;
 
-    tl.to(pageGroups.map(g => g.position), {
-      x: (i) => (i - centerX) * 0.35,
-      y: 0,
-      z: 0,
-      stagger: 0.02,
-      ease: "power3.out"
-    }, "final");
-
-    tl.to(pageGroups.map(g => g.rotation), {
-      y: (i) => {
-        const rel = i - centerX;
-        const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
-        return rel > 0 ? -angle : angle;
+    tl.to(
+      pageGroups.map(g => g.position),
+      {
+        x: function(index: number) { return (index - centerX) * 0.35; },
+        y: 0,
+        z: 0,
+        stagger: 0.02,
+        ease: "power3.out"
       },
-      x: 0,
-      z: 0,
-      stagger: 0.02,
-      ease: "power3.out",
-      onComplete: () => setIsCarouselMode(true)
-    }, "final");
+      "final"
+    );
+
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: function(index: number) {
+          const rel = index - centerX;
+          const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
+          return rel > 0 ? -angle : angle;
+        },
+        x: 0,
+        z: 0,
+        stagger: 0.02,
+        ease: "power3.out",
+        onComplete: () => setIsCarouselMode(true)
+      },
+      "final"
+    );
   }, [scene, camera]);
 
   // Handle carousel scrolling with wheel and drag
