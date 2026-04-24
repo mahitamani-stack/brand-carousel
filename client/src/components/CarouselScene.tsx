@@ -218,39 +218,38 @@ function SceneController() {
       "<"
     );
 
-    // Replace the final two tl.to() blocks with this:
+    // Final state: edge-on center with card wings
     const centerX = (N - 1) / 2;
 
     tl.to(
       pageGroups.map(g => g.position),
       {
-        x: (i: number) => (i - centerX) * 0.3, // Tighter overlap
-        z: (i: number) => -Math.abs(i - centerX) * 0.1, // Slight z-depth variation
-        stagger: {
-          amount: 0.5,
-          from: "start"
-        },
-        ease: "power2.out",
+        x: (i: number) => (i - centerX) * 0.25, // Very tight horizontal spacing
+        z: (i: number) => Math.abs(i - centerX) * 0.5, // Pushes outer cards back
+        stagger: { amount: 0.8 },
+        ease: "power2.inOut",
       },
-      "final-spread" // Label to sync these animations
+      "final"
     );
 
     tl.to(
       pageGroups.map(g => g.rotation),
       {
         x: 0,
-        y: (i: number) => (i - centerX) * 0.15, // Fanned/angled Y rotation
-        z: 0,
-        stagger: {
-          amount: 0.5,
-          from: "start"
+        y: (i: number) => {
+            const diff = i - centerX;
+            // The "Edge-on" effect: 
+            // Cards on left of center: ~1.5 radians (90 deg)
+            // Cards on right of center: ~-1.5 radians (-90 deg)
+            // Adjust the 0.15 multiplier to control how much the wings face the user
+            return diff > 0 ? -1.5 + (diff * 0.15) : 1.5 + (diff * 0.15);
         },
-        ease: "power2.out",
-        onComplete: () => {
-          setIsCarouselMode(true); // Enable drag scrolling
-        }
+        z: 0,
+        stagger: { amount: 0.8 },
+        ease: "power2.inOut",
+        onComplete: () => setIsCarouselMode(true)
       },
-      "final-spread"
+      "final"
     );
   }, [scene, camera]);
 
@@ -283,7 +282,7 @@ function SceneController() {
     return () => window.removeEventListener('mousedown', handleMouseDown);
   }, [isCarouselMode]);
 
-  // Update carousel positions
+  // Update carousel positions with swapping edge-on effect
   useFrame(() => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
@@ -291,18 +290,24 @@ function SceneController() {
     const centerX = (N - 1) / 2;
 
     pageGroupsRef.current.forEach((group, i) => {
-      // Current base position relative to center
-      const basePos = i - centerX;
-      
-      // Update X position based on scroll
-      group.position.x = (basePos + scrollXRef.current) * 0.3;
-      
-      // Update Z position based on distance from center (v-shape)
-      group.position.z = -Math.abs(basePos + scrollXRef.current) * 0.1;
+      // 1. Calculate relative position including scroll
+      const relX = (i - centerX) + (scrollXRef.current * 1.5); // Adjust 1.5 for scroll speed
 
-      // Update Y Rotation to maintain fan perspective while scrolling
-      // This makes cards turn as they move across the view
-      group.rotation.y = (basePos + scrollXRef.current) * -0.3;
+      // 2. Position: Tight horizontal strip with a slight curve in Z
+      group.position.x = relX * 0.35; 
+      group.position.z = Math.abs(relX) * 0.4;
+
+      // 3. Rotation: The "Swapping" motion
+      // As relX passes 0, the card "flips" its edge orientation
+      const baseRotation = relX > 0 ? -1.5 : 1.5;
+      
+      // This adds the "facing the viewer" tilt as they move to the sides
+      const tiltTowardViewer = relX * 0.12; 
+      
+      group.rotation.y = baseRotation + tiltTowardViewer;
+
+      // Optional: Add a slight "breathing" or tilt to X/Z for organic feel
+      group.rotation.x = Math.sin(Date.now() * 0.001 + i) * 0.02;
     });
   });
 
