@@ -5,26 +5,26 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 const BRANDS = [
-  { name:"McDonald's",    file:"mcdonalds.png",    color:"#FFC72C" },
-  { name:"KFC",           file:"kfc.png",           color:"#E4002B" },
-  { name:"Domino's",      file:"dominos.png",       color:"#006491" },
-  { name:"Pizza Hut",     file:"pizzahut.png",      color:"#EE3124" },
-  { name:"Burger King",   file:"burgerking.png",    color:"#F5A623" },
-  { name:"Taco Bell",     file:"tacobell.png",      color:"#702082" },
-  { name:"Subway",        file:"subway.png",        color:"#009B48" },
-  { name:"Papa John's",   file:"papajohns.png",     color:"#004B87" },
-  { name:"Maggi",         file:"maggi.png",         color:"#CC0000" },
-  { name:"Yippee",        file:"yippee.png",        color:"#E63329" },
-  { name:"Ching's",       file:"chings.png",        color:"#D4232A" },
-  { name:"Indomie",       file:"indomie.png",       color:"#E31837" },
-  { name:"Nissin",        file:"nissin.png",        color:"#CC0000" },
-  { name:"GIPPI",         file:"gippi.png",         color:"#F47920" },
-  { name:"Top Ramen",     file:"topramen.png",      color:"#E63329" },
-  { name:"Bingo!",        file:"bingo.png",         color:"#FF6B35" },
-  { name:"Lay's",         file:"lays.png",          color:"#E8CD00" },
-  { name:"Haldiram's",    file:"Haldirams.png",     color:"#C8860A" },
-  { name:"CRAX",          file:"crax.png",          color:"#E63329" },
-  { name:"Balaji",        file:"balaji.png",        color:"#E31837" },
+  { name:"McDonald's",    file:"mcdonalds.png" },
+  { name:"KFC",           file:"kfc.png" },
+  { name:"Domino's",      file:"dominos.png" },
+  { name:"Pizza Hut",     file:"pizzahut.png" },
+  { name:"Burger King",   file:"burgerking.png" },
+  { name:"Taco Bell",     file:"tacobell.png" },
+  { name:"Subway",        file:"subway.png" },
+  { name:"Papa John's",   file:"papajohns.png" },
+  { name:"Maggi",         file:"maggi.png" },
+  { name:"Yippee",        file:"yippee.png" },
+  { name:"Ching's",       file:"chings.png" },
+  { name:"Indomie",       file:"indomie.png" },
+  { name:"Nissin",        file:"nissin.png" },
+  { name:"GIPPI",         file:"gippi.png" },
+  { name:"Top Ramen",     file:"topramen.png" },
+  { name:"Bingo!",        file:"bingo.png" },
+  { name:"Lay's",         file:"lays.png" },
+  { name:"Haldiram's",    file:"Haldirams.png" },
+  { name:"CRAX",          file:"crax.png" },
+  { name:"Balaji",        file:"balaji.png" },
 ];
 
 const N = 20;
@@ -38,20 +38,9 @@ function buildTexture(brand: typeof BRANDS[0]): THREE.CanvasTexture {
   canvas.height = 840;
   const ctx = canvas.getContext('2d')!;
 
-  // White background
+  // Pure white background
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, 600, 840);
-
-  // Color accent bar
-  ctx.fillStyle = brand.color;
-  ctx.fillRect(0, 0, 600, 30);
-
-  // Brand name
-  ctx.fillStyle = '#AAAAAA';
-  ctx.font = '300 20px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(brand.name.toUpperCase(), 300, 810);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = true;
@@ -68,8 +57,9 @@ function SceneController() {
   const targetScrollXRef = useRef(0);
 
   useEffect(() => {
-    // Create fan container
+    // Create fan container at center
     const fanContainer = new THREE.Group();
+    fanContainer.position.set(0, 0, 0);
     scene.add(fanContainer);
     fanContainerRef.current = fanContainer;
 
@@ -81,7 +71,7 @@ function SceneController() {
       const brand = BRANDS[i];
       const texture = buildTexture(brand);
 
-      // Create materials
+      // Create materials - white cards only
       const frontMat = new THREE.MeshStandardMaterial({
         map: texture,
         transparent: true,
@@ -89,7 +79,7 @@ function SceneController() {
         side: THREE.FrontSide,
       });
       const backMat = new THREE.MeshStandardMaterial({
-        map: texture,
+        color: 0xffffff,
         transparent: true,
         opacity: 0,
         side: THREE.BackSide,
@@ -104,9 +94,10 @@ function SceneController() {
       const geometry = new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T);
       const materials = [sideMat, sideMat, sideMat, sideMat, frontMat, backMat];
       const mesh = new THREE.Mesh(geometry, materials);
+      // Pivot at left edge (spine)
       mesh.position.x = CARD_W / 2;
 
-      // Create group with proper pivot
+      // Create group with proper pivot at center
       const grp = new THREE.Group();
       grp.position.z = (N - i) * 0.02;
       grp.add(mesh);
@@ -122,58 +113,63 @@ function SceneController() {
     // Run animation timeline
     const tl = gsap.timeline();
 
-    // Phase 1: Reveal
+    // Phase 1: Reveal (fade in all cards)
     tl.to(pageMats, { opacity: 1, duration: 0.6, stagger: 0.02 });
 
-    // Phase 2: Fan open (springy)
+    // Phase 2: Fan open from center (radial spread around Y-axis)
     tl.to(
       pageGroups.map(g => g.rotation),
       {
-        y: (i: number) => -(i / (N - 1)) * Math.PI * 0.85,
+        y: (i: number) => (i / (N - 1) - 0.5) * Math.PI * 1.0, // Spread from -50° to +50°
         duration: 1.5,
-        ease: "back.out(1.5)",
-        stagger: 0.05,
+        ease: "power2.inOut",
+        stagger: 0.03,
       },
       "+=0.2"
     );
 
-    // Phase 3: Spin
+    // Phase 3: Spin the entire stack around Z-axis
     tl.to(
       fanContainer.rotation,
       {
-        y: Math.PI * 4,
-        x: -0.4,
-        duration: 4,
-        ease: "power2.inOut",
+        z: Math.PI * 3.5, // Full rotations
+        duration: 3.2,
+        ease: "linear",
       },
-      "+=0.2"
+      "+=0.1"
     );
 
-    // Phase 4: Transition to carousel
-    tl.to(fanContainer.rotation, { x: -0.2, y: 0, duration: 1.5, ease: "power3.inOut" });
+    // Phase 4: Burst transition to carousel (rapid 600-800ms)
+    // Reset container rotation
+    tl.to(
+      fanContainer.rotation,
+      { z: 0, duration: 0.7, ease: "power3.out" }
+    );
 
-    const GAP = 0.85;
+    // Spread cards horizontally
+    const GAP = 0.35; // Spacing: ~1/4 of card width
     tl.to(
       pageGroups.map(g => g.position),
       {
         x: (i: number) => (i - (N - 1) / 2) * GAP,
         z: 0,
-        duration: 1.5,
-        ease: "power3.inOut",
-        onComplete: () => setIsCarouselMode(true),
+        duration: 0.7,
+        ease: "power3.out",
       },
       "<"
     );
 
+    // Apply final 45-60 degree tilt based on position
     tl.to(
       pageGroups.map(g => g.rotation),
       {
         y: (i: number) => {
           const n = (i - (N - 1) / 2) / (N / 2);
-          return n * -1.2;
+          return n * (Math.PI / 3.2); // ~56 degrees at edges
         },
-        duration: 1.5,
-        ease: "power3.inOut",
+        duration: 0.7,
+        ease: "power3.out",
+        onComplete: () => setIsCarouselMode(true),
       },
       "<"
     );
@@ -188,7 +184,7 @@ function SceneController() {
       const startScrollX = targetScrollXRef.current;
 
       const handleMouseMove = (e: MouseEvent) => {
-        const dx = (e.pageX - startX) * 0.01;
+        const dx = (e.pageX - startX) * 0.008;
         targetScrollXRef.current = startScrollX + dx;
       };
 
@@ -209,17 +205,18 @@ function SceneController() {
   useFrame(() => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
-    scrollXRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.1;
+    scrollXRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.12;
 
-    const GAP = 0.85;
+    const GAP = 0.35;
     pageGroupsRef.current.forEach((grp, i) => {
       const basePos = (i - (N - 1) / 2) * GAP;
       const currentPos = basePos + scrollXRef.current;
 
       grp.position.x = currentPos;
-      const n = currentPos / 5;
-      grp.rotation.y = n * -1.2;
-      grp.position.z = -Math.abs(n) * 2;
+      
+      // Maintain 45-60 degree tilt based on position
+      const n = currentPos / 7;
+      grp.rotation.y = n * (Math.PI / 3.2);
     });
   });
 
@@ -229,9 +226,15 @@ function SceneController() {
 export function CarouselScene() {
   return (
     <Canvas style={{ width: '100%', height: '100vh' }}>
-      <PerspectiveCamera position={[0, 3.5, 6.5]} fov={45} makeDefault />
-      <ambientLight intensity={1} />
-      <directionalLight position={[5, 10, 5]} intensity={0.8} />
+      {/* Camera: Fixed, centered, angled slightly downward (15-20 degrees) */}
+      <PerspectiveCamera 
+        position={[0, 0.6, 5.0]} 
+        fov={48} 
+        makeDefault 
+        rotation={[-0.25, 0, 0]} // Slight downward angle
+      />
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[5, 8, 5]} intensity={0.9} />
       <SceneController />
     </Canvas>
   );
