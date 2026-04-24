@@ -145,13 +145,13 @@ function SceneController() {
     const cameraState = { y: 0.15, z: 5.8 };
 
     // Phase 1: Reveal all cards
-    tl.to(pageGroups.map(g => g), { opacity: 1, duration: 0.6, stagger: 0.02 });
+    tl.to(pageGroups, { opacity: 1, duration: 0.6, stagger: 0.02 });
 
     // Phase 2: Fan open (rotate around Y-axis)
     tl.to(
-      pageGroups.map(g => g.rotation),
+      pageGroups,
       {
-        y: function(index: number) { return -(index / (N - 1)) * Math.PI * 0.85; },
+        rotationY: function(index: number) { return -(index / (N - 1)) * Math.PI * 0.85; },
         duration: 1.5,
         ease: "back.out(1.5)",
         stagger: 0.05,
@@ -205,10 +205,10 @@ function SceneController() {
 
     // Collapse and unroll into horizontal strip
     tl.to(
-      pageGroups.map(g => g.rotation),
+      pageGroups,
       {
-        y: 0,
-        z: 0,
+        rotationY: 0,
+        rotationZ: 0,
         duration: 1.0,
         stagger: { each: 0.02, from: 'end' },
         ease: "power2.inOut",
@@ -217,13 +217,12 @@ function SceneController() {
     );
 
     // Final state: edge-on center with card wings
-    const N = pageGroups.length;
-    const centerX = (N - 1) / 2;
+    const centerIdx = (pageGroups.length - 1) / 2;
 
     tl.to(
-      pageGroups.map(g => g.position),
+      pageGroups,
       {
-        x: function(index: number) { return (index - centerX) * 0.35; },
+        x: function(index: number) { return (index - centerIdx) * 0.35; },
         y: 0,
         z: 0,
         stagger: 0.02,
@@ -233,15 +232,15 @@ function SceneController() {
     );
 
     tl.to(
-      pageGroups.map(g => g.rotation),
+      pageGroups,
       {
-        y: function(index: number) {
-          const rel = index - centerX;
+        rotationY: function(index: number) {
+          const rel = index - centerIdx;
           const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
           return rel > 0 ? -angle : angle;
         },
-        x: 0,
-        z: 0,
+        rotationX: 0,
+        rotationZ: 0,
         stagger: 0.02,
         ease: "power3.out",
         onComplete: () => setIsCarouselMode(true)
