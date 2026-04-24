@@ -5,29 +5,88 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 const BRANDS = [
-  { name:"McDonald's",    file:"mcdonalds.png" },
-  { name:"KFC",           file:"kfc.png" },
-  { name:"Domino's",      file:"dominos.png" },
-  { name:"Pizza Hut",     file:"pizzahut.png" },
-  { name:"Burger King",   file:"burgerking.png" },
-  { name:"Taco Bell",     file:"tacobell.png" },
-  { name:"Subway",        file:"subway.png" },
-  { name:"Papa John's",   file:"papajohns.png" },
-  { name:"Maggi",         file:"maggi.png" },
-  { name:"Yippee",        file:"yippee.png" },
-  { name:"Ching's",       file:"chings.png" },
-  { name:"Indomie",       file:"indomie.png" },
-  { name:"Nissin",        file:"nissin.png" },
-  { name:"GIPPI",         file:"gippi.png" },
-  { name:"Top Ramen",     file:"topramen.png" },
-  { name:"Bingo!",        file:"bingo.png" },
-  { name:"Lay's",         file:"lays.png" },
-  { name:"Haldiram's",    file:"Haldirams.png" },
-  { name:"CRAX",          file:"crax.png" },
-  { name:"Balaji",        file:"balaji.png" },
+  { name:"7up", file:"7up.png" },
+  { name:"Haldirams", file:"Haldirams.png" },
+  { name:"aachi", file:"aachi.png" },
+  { name:"aashirvaad", file:"aashirvaad.png" },
+  { name:"addme", file:"addme.png" },
+  { name:"ajmi", file:"ajmi.png" },
+  { name:"balaji", file:"balaji.png" },
+  { name:"bingo", file:"bingo.png" },
+  { name:"brahmins", file:"brahmins.png" },
+  { name:"britannia", file:"britannia.png" },
+  { name:"burgerking", file:"burgerking.png" },
+  { name:"cadbury", file:"cadbury.png" },
+  { name:"caldera", file:"caldera.png" },
+  { name:"campacola", file:"campacola.png" },
+  { name:"cerelac", file:"cerelac.png" },
+  { name:"chings", file:"chings.png" },
+  { name:"cocacola", file:"cocacola.png" },
+  { name:"crax", file:"crax.png" },
+  { name:"dominos", file:"dominos.png" },
+  { name:"eastern", file:"eastern.png" },
+  { name:"everest", file:"everest.png" },
+  { name:"farmley", file:"farmley.png" },
+  { name:"fortune", file:"fortune.png" },
+  { name:"ganesh", file:"ganesh.png" },
+  { name:"gippi", file:"gippi.png" },
+  { name:"gocheese", file:"gocheese.png" },
+  { name:"gowardhan", file:"gowardhan.png" },
+  { name:"granamma", file:"granamma.png" },
+  { name:"havmor", file:"havmor.png" },
+  { name:"horlicks", file:"horlicks.png" },
+  { name:"indiagate", file:"indiagate.png" },
+  { name:"indomie", file:"indomie.png" },
+  { name:"jolliz", file:"jolliz.png" },
+  { name:"kemchho", file:"kemchho.png" },
+  { name:"keventers", file:"keventers.png" },
+  { name:"kfc", file:"kfc.png" },
+  { name:"kivo", file:"kivo.png" },
+  { name:"kp", file:"kp.png" },
+  { name:"lays", file:"lays.png" },
+  { name:"licious", file:"licious.png" },
+  { name:"maggi", file:"maggi.png" },
+  { name:"mcdonalds", file:"mcdonalds.png" },
+  { name:"milkmaid", file:"milkmaid.png" },
+  { name:"mimo", file:"mimo.png" },
+  { name:"mirinda", file:"mirinda.png" },
+  { name:"motherdairy", file:"motherdairy.png" },
+  { name:"mtr", file:"mtr.png" },
+  { name:"munch", file:"munch.png" },
+  { name:"nescafe", file:"nescafe.png" },
+  { name:"nic", file:"nic.png" },
+  { name:"nilons", file:"nilons.png" },
+  { name:"nissin", file:"nissin.png" },
+  { name:"organictatva", file:"organictatva.png" },
+  { name:"papajohns", file:"papajohns.png" },
+  { name:"pepsi", file:"pepsi.png" },
+  { name:"pizzahut", file:"pizzahut.png" },
+  { name:"prabhuji", file:"prabhuji.png" },
+  { name:"realbites", file:"realbites.png" },
+  { name:"reliance", file:"reliance.png" },
+  { name:"saffola", file:"saffola.png" },
+  { name:"savai", file:"savai.png" },
+  { name:"shan", file:"shan.png" },
+  { name:"shana", file:"shana.png" },
+  { name:"silvercoin", file:"silvercoin.png" },
+  { name:"slice", file:"slice.png" },
+  { name:"snacksbeyond", file:"snacksbeyond.png" },
+  { name:"subway", file:"subway.png" },
+  { name:"sunderfarsan", file:"sunderfarsan.png" },
+  { name:"sunfeast", file:"sunfeast.png" },
+  { name:"superyou", file:"superyou.png" },
+  { name:"suruchi", file:"suruchi.png" },
+  { name:"tacobell", file:"tacobell.png" },
+  { name:"talod", file:"talod.png" },
+  { name:"threemango", file:"threemango.png" },
+  { name:"topramen", file:"topramen.png" },
+  { name:"tuc", file:"tuc.png" },
+  { name:"veeba", file:"veeba.png" },
+  { name:"yippee", file:"yippee.png" },
+  { name:"zeeba", file:"zeeba.png" },
 ];
 
-const N = 20;
+const N = BRANDS.length;
 const CARD_W = 1.2;
 const CARD_H = 1.7;
 const CARD_T = 0.015;
@@ -140,112 +199,30 @@ function SceneController() {
 
     pageGroupsRef.current = pageGroups;
 
-    // Run animation timeline
+    // Run animation timeline - simple intro to blade effect
     const tl = gsap.timeline();
-    const cameraState = { y: 0.15, z: 5.8 };
+    const centerIdx = (N - 1) / 2;
 
-    // Phase 1: Reveal all cards
-    tl.to(pageGroups, { opacity: 1, duration: 0.6, stagger: 0.02 });
-
-    // Phase 2: Fan open (rotate around Y-axis)
-    tl.to(
-      pageGroups,
-      {
-        rotationY: function(index: number) { return -(index / (N - 1)) * Math.PI * 0.85; },
-        duration: 1.5,
-        ease: "back.out(1.5)",
-        stagger: 0.05,
-      },
-      "<"
-    );
-
-    // Phase 3: Camera moves up to 45-degree angle during spin
-    tl.to(
-      cameraState,
-      {
-        y: 2.2,
-        z: 3.8,
-        duration: 3.5,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          camera.position.y = cameraState.y;
-          camera.position.z = cameraState.z;
-          camera.lookAt(0, 0, 0);
-        },
-      },
-      "<"
-    );
-
-    // Spin around Y-axis
-    tl.to(
-      fanContainer.rotation,
-      {
-        y: Math.PI * 4,
-        duration: 3.5,
-        ease: "linear",
-      },
-      "<"
-    );
-
-    // Phase 4: Camera returns to center
-    tl.to(
-      cameraState,
-      {
-        y: 0.15,
-        z: 5.8,
-        duration: 1.2,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          camera.position.y = cameraState.y;
-          camera.position.z = cameraState.z;
-          camera.lookAt(0, 0, 0);
-        },
-      }
-    );
-
-    // Collapse and unroll into horizontal strip
-    tl.to(
-      pageGroups,
-      {
-        rotationY: 0,
-        rotationZ: 0,
-        duration: 1.0,
-        stagger: { each: 0.02, from: 'end' },
-        ease: "power2.inOut",
-      },
-      "<"
-    );
-
-    // Final state: edge-on center with card wings
-    const centerIdx = (pageGroups.length - 1) / 2;
-
+    // Phase 1: Reveal all cards in blade layout
     tl.to(
       pageGroups,
       {
         x: function(index: number) { return (index - centerIdx) * 0.35; },
         y: 0,
         z: 0,
-        stagger: 0.02,
-        ease: "power3.out"
-      },
-      "final"
-    );
-
-    tl.to(
-      pageGroups,
-      {
+        opacity: 1,
+        rotationX: 0,
         rotationY: function(index: number) {
           const rel = index - centerIdx;
           const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
           return rel > 0 ? -angle : angle;
         },
-        rotationX: 0,
         rotationZ: 0,
-        stagger: 0.02,
-        ease: "power3.out",
+        duration: 1.5,
+        stagger: 0.01,
+        ease: "power2.inOut",
         onComplete: () => setIsCarouselMode(true)
-      },
-      "final"
+      }
     );
   }, [scene, camera]);
 
