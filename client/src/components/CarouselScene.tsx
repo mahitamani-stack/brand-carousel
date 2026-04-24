@@ -28,9 +28,9 @@ const BRANDS = [
 ];
 
 const N = 20;
-const CARD_W = 1.5;
-const CARD_H = 2.1;
-const CARD_T = 0.02;
+const CARD_W = 1.2; // Scaled down
+const CARD_H = 1.7; // Scaled down
+const CARD_T = 0.015; // Scaled down
 
 function buildTexture(brand: typeof BRANDS[0]): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -38,20 +38,9 @@ function buildTexture(brand: typeof BRANDS[0]): THREE.CanvasTexture {
   canvas.height = 840;
   const ctx = canvas.getContext('2d')!;
 
-  // White background
+  // Pure white background (no colored bars, no text)
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, 600, 840);
-
-  // Color accent bar
-  ctx.fillStyle = brand.color;
-  ctx.fillRect(0, 0, 600, 30);
-
-  // Brand name
-  ctx.fillStyle = '#AAAAAA';
-  ctx.font = '300 20px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(brand.name.toUpperCase(), 300, 810);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = true;
@@ -59,7 +48,7 @@ function buildTexture(brand: typeof BRANDS[0]): THREE.CanvasTexture {
 }
 
 function SceneController() {
-  const { scene } = useThree();
+  const { scene, camera } = useThree();
   const fanContainerRef = useRef<THREE.Group>(null);
   const pageGroupsRef = useRef<THREE.Group[]>([]);
   const pageMatRef = useRef<THREE.Material[]>([]);
@@ -70,6 +59,7 @@ function SceneController() {
   useEffect(() => {
     // Create fan container
     const fanContainer = new THREE.Group();
+    fanContainer.position.set(0, 0, 0);
     scene.add(fanContainer);
     fanContainerRef.current = fanContainer;
 
@@ -121,11 +111,12 @@ function SceneController() {
 
     // Run animation timeline
     const tl = gsap.timeline();
+    const cameraState = { y: 0.15, z: 5.8 };
 
-    // Phase 1: Reveal
-    tl.to(pageMats, { opacity: 1, duration: 0.6, stagger: 0.02 });
+    // Phase 1: Reveal first card only
+    tl.to(pageMats[0], { opacity: 1, duration: 0.5 });
 
-    // Phase 2: Fan open (springy)
+    // Phase 2: Fan open (rotate around Y-axis)
     tl.to(
       pageGroups.map(g => g.rotation),
       {
@@ -137,47 +128,91 @@ function SceneController() {
       "+=0.2"
     );
 
-    // Phase 3: Spin
+    // Phase 3: Camera moves up to 45-degree angle during spin
+    tl.to(
+      cameraState,
+      {
+        y: 2.2,
+        z: 3.8,
+        duration: 3.5,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          camera.position.y = cameraState.y;
+          camera.position.z = cameraState.z;
+          camera.lookAt(0, 0, 0);
+        },
+      },
+      "+=0.1"
+    );
+
+    // Spin around Y-axis (not X)
     tl.to(
       fanContainer.rotation,
       {
         y: Math.PI * 4,
-        x: -0.4,
-        duration: 4,
-        ease: "power2.inOut",
+        duration: 3.5,
+        ease: "linear",
       },
-      "+=0.2"
+      "<"
     );
 
-    // Phase 4: Transition to carousel
-    tl.to(fanContainer.rotation, { x: -0.2, y: 0, duration: 1.5, ease: "power3.inOut" });
+    // Phase 4: Camera returns to center
+    tl.to(
+      cameraState,
+      {
+        y: 0.15,
+        z: 5.8,
+        duration: 1.2,
+        ease: "power2.inOut",
+        onUpdate: () => {
+          camera.position.y = cameraState.y;
+          camera.position.z = cameraState.z;
+          camera.lookAt(0, 0, 0);
+        },
+      }
+    );
 
-    const GAP = 0.85;
+    // Collapse and unroll into horizontal strip
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: 0,
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'end' },
+        ease: "power2.inOut",
+      },
+      "<"
+    );
+
+    const GAP = 0.5; // Smaller spacing for scaled-down carousel
     tl.to(
       pageGroups.map(g => g.position),
       {
         x: (i: number) => (i - (N - 1) / 2) * GAP,
         z: 0,
-        duration: 1.5,
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'center' },
         ease: "power3.inOut",
-        onComplete: () => setIsCarouselMode(true),
       },
       "<"
     );
 
+    // Final shelf angle
     tl.to(
       pageGroups.map(g => g.rotation),
       {
         y: (i: number) => {
           const n = (i - (N - 1) / 2) / (N / 2);
-          return n * -1.2;
+          return n * -0.8;
         },
-        duration: 1.5,
-        ease: "power3.inOut",
+        duration: 1.0,
+        stagger: { each: 0.02, from: 'center' },
+        ease: "power3.out",
+        onComplete: () => setIsCarouselMode(true),
       },
       "<"
     );
-  }, [scene]);
+  }, [scene, camera]);
 
   // Handle carousel scrolling
   useEffect(() => {
@@ -211,15 +246,15 @@ function SceneController() {
 
     scrollXRef.current += (targetScrollXRef.current - scrollXRef.current) * 0.1;
 
-    const GAP = 0.85;
+    const GAP = 0.5;
     pageGroupsRef.current.forEach((grp, i) => {
       const basePos = (i - (N - 1) / 2) * GAP;
       const currentPos = basePos + scrollXRef.current;
 
       grp.position.x = currentPos;
-      const n = currentPos / 5;
-      grp.rotation.y = n * -1.2;
-      grp.position.z = -Math.abs(n) * 2;
+      const n = currentPos / 6;
+      grp.rotation.y = n * -0.8;
+      grp.position.z = -Math.abs(n) * 1.5;
     });
   });
 
@@ -229,8 +264,8 @@ function SceneController() {
 export function CarouselScene() {
   return (
     <Canvas style={{ width: '100%', height: '100vh' }}>
-      <PerspectiveCamera position={[0, 3.5, 6.5]} fov={45} makeDefault />
-      <ambientLight intensity={1} />
+      <PerspectiveCamera position={[0, 0.15, 5.8]} fov={42} makeDefault />
+      <ambientLight intensity={1.2} />
       <directionalLight position={[5, 10, 5]} intensity={0.8} />
       <SceneController />
     </Canvas>
