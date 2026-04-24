@@ -5,116 +5,119 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 
 const BRANDS = [
-  { name:"7up", file:"7up.png" },
-  { name:"Haldirams", file:"Haldirams.png" },
-  { name:"aachi", file:"aachi.png" },
-  { name:"aashirvaad", file:"aashirvaad.png" },
-  { name:"addme", file:"addme.png" },
-  { name:"ajmi", file:"ajmi.png" },
-  { name:"balaji", file:"balaji.png" },
-  { name:"bingo", file:"bingo.png" },
-  { name:"brahmins", file:"brahmins.png" },
-  { name:"britannia", file:"britannia.png" },
-  { name:"burgerking", file:"burgerking.png" },
-  { name:"cadbury", file:"cadbury.png" },
-  { name:"caldera", file:"caldera.png" },
-  { name:"campacola", file:"campacola.png" },
-  { name:"cerelac", file:"cerelac.png" },
-  { name:"chings", file:"chings.png" },
-  { name:"cocacola", file:"cocacola.png" },
-  { name:"crax", file:"crax.png" },
-  { name:"dominos", file:"dominos.png" },
-  { name:"eastern", file:"eastern.png" },
-  { name:"everest", file:"everest.png" },
-  { name:"farmley", file:"farmley.png" },
-  { name:"fortune", file:"fortune.png" },
-  { name:"ganesh", file:"ganesh.png" },
-  { name:"gippi", file:"gippi.png" },
-  { name:"gocheese", file:"gocheese.png" },
-  { name:"gowardhan", file:"gowardhan.png" },
-  { name:"granamma", file:"granamma.png" },
-  { name:"havmor", file:"havmor.png" },
-  { name:"horlicks", file:"horlicks.png" },
-  { name:"indiagate", file:"indiagate.png" },
-  { name:"indomie", file:"indomie.png" },
-  { name:"jolliz", file:"jolliz.png" },
-  { name:"kemchho", file:"kemchho.png" },
-  { name:"keventers", file:"keventers.png" },
-  { name:"kfc", file:"kfc.png" },
-  { name:"kivo", file:"kivo.png" },
-  { name:"kp", file:"kp.png" },
-  { name:"lays", file:"lays.png" },
-  { name:"licious", file:"licious.png" },
-  { name:"maggi", file:"maggi.png" },
-  { name:"mcdonalds", file:"mcdonalds.png" },
-  { name:"milkmaid", file:"milkmaid.png" },
-  { name:"mimo", file:"mimo.png" },
-  { name:"mirinda", file:"mirinda.png" },
-  { name:"motherdairy", file:"motherdairy.png" },
-  { name:"mtr", file:"mtr.png" },
-  { name:"munch", file:"munch.png" },
-  { name:"nescafe", file:"nescafe.png" },
-  { name:"nic", file:"nic.png" },
-  { name:"nilons", file:"nilons.png" },
-  { name:"nissin", file:"nissin.png" },
+  { name:"7up",          file:"7up.png" },
+  { name:"Haldirams",    file:"Haldirams.png" },
+  { name:"aachi",        file:"aachi.png" },
+  { name:"aashirvaad",   file:"aashirvaad.png" },
+  { name:"addme",        file:"addme.png" },
+  { name:"ajmi",         file:"ajmi.png" },
+  { name:"balaji",       file:"balaji.png" },
+  { name:"bingo",        file:"bingo.png" },
+  { name:"brahmins",     file:"brahmins.png" },
+  { name:"britannia",    file:"britannia.png" },
+  { name:"burgerking",   file:"burgerking.png" },
+  { name:"cadbury",      file:"cadbury.png" },
+  { name:"caldera",      file:"caldera.png" },
+  { name:"campacola",    file:"campacola.png" },
+  { name:"cerelac",      file:"cerelac.png" },
+  { name:"chings",       file:"chings.png" },
+  { name:"cocacola",     file:"cocacola.png" },
+  { name:"crax",         file:"crax.png" },
+  { name:"dominos",      file:"dominos.png" },
+  { name:"eastern",      file:"eastern.png" },
+  { name:"everest",      file:"everest.png" },
+  { name:"farmley",      file:"farmley.png" },
+  { name:"fortune",      file:"fortune.png" },
+  { name:"ganesh",       file:"ganesh.png" },
+  { name:"gippi",        file:"gippi.png" },
+  { name:"gocheese",     file:"gocheese.png" },
+  { name:"gowardhan",    file:"gowardhan.png" },
+  { name:"granamma",     file:"granamma.png" },
+  { name:"havmor",       file:"havmor.png" },
+  { name:"horlicks",     file:"horlicks.png" },
+  { name:"indiagate",    file:"indiagate.png" },
+  { name:"indomie",      file:"indomie.png" },
+  { name:"jolliz",       file:"jolliz.png" },
+  { name:"kemchho",      file:"kemchho.png" },
+  { name:"keventers",    file:"keventers.png" },
+  { name:"kfc",          file:"kfc.png" },
+  { name:"kivo",         file:"kivo.png" },
+  { name:"kp",           file:"kp.png" },
+  { name:"lays",         file:"lays.png" },
+  { name:"licious",      file:"licious.png" },
+  { name:"maggi",        file:"maggi.png" },
+  { name:"mcdonalds",    file:"mcdonalds.png" },
+  { name:"milkmaid",     file:"milkmaid.png" },
+  { name:"mimo",         file:"mimo.png" },
+  { name:"mirinda",      file:"mirinda.png" },
+  { name:"motherdairy",  file:"motherdairy.png" },
+  { name:"mtr",          file:"mtr.png" },
+  { name:"munch",        file:"munch.png" },
+  { name:"nescafe",      file:"nescafe.png" },
+  { name:"nic",          file:"nic.png" },
+  { name:"nilons",       file:"nilons.png" },
+  { name:"nissin",       file:"nissin.png" },
   { name:"organictatva", file:"organictatva.png" },
-  { name:"papajohns", file:"papajohns.png" },
-  { name:"pepsi", file:"pepsi.png" },
-  { name:"pizzahut", file:"pizzahut.png" },
-  { name:"prabhuji", file:"prabhuji.png" },
-  { name:"realbites", file:"realbites.png" },
-  { name:"reliance", file:"reliance.png" },
-  { name:"saffola", file:"saffola.png" },
-  { name:"savai", file:"savai.png" },
-  { name:"shan", file:"shan.png" },
-  { name:"shana", file:"shana.png" },
-  { name:"silvercoin", file:"silvercoin.png" },
-  { name:"slice", file:"slice.png" },
+  { name:"papajohns",    file:"papajohns.png" },
+  { name:"pepsi",        file:"pepsi.png" },
+  { name:"pizzahut",     file:"pizzahut.png" },
+  { name:"prabhuji",     file:"prabhuji.png" },
+  { name:"realbites",    file:"realbites.png" },
+  { name:"reliance",     file:"reliance.png" },
+  { name:"saffola",      file:"saffola.png" },
+  { name:"savai",        file:"savai.png" },
+  { name:"shan",         file:"shan.png" },
+  { name:"shana",        file:"shana.png" },
+  { name:"silvercoin",   file:"silvercoin.png" },
+  { name:"slice",        file:"slice.png" },
   { name:"snacksbeyond", file:"snacksbeyond.png" },
-  { name:"subway", file:"subway.png" },
+  { name:"subway",       file:"subway.png" },
   { name:"sunderfarsan", file:"sunderfarsan.png" },
-  { name:"sunfeast", file:"sunfeast.png" },
-  { name:"superyou", file:"superyou.png" },
-  { name:"suruchi", file:"suruchi.png" },
-  { name:"tacobell", file:"tacobell.png" },
-  { name:"talod", file:"talod.png" },
-  { name:"threemango", file:"threemango.png" },
-  { name:"topramen", file:"topramen.png" },
-  { name:"tuc", file:"tuc.png" },
-  { name:"veeba", file:"veeba.png" },
-  { name:"yippee", file:"yippee.png" },
-  { name:"zeeba", file:"zeeba.png" },
+  { name:"sunfeast",     file:"sunfeast.png" },
+  { name:"superyou",     file:"superyou.png" },
+  { name:"suruchi",      file:"suruchi.png" },
+  { name:"tacobell",     file:"tacobell.png" },
+  { name:"talod",        file:"talod.png" },
+  { name:"threemango",   file:"threemango.png" },
+  { name:"topramen",     file:"topramen.png" },
+  { name:"tuc",          file:"tuc.png" },
+  { name:"veeba",        file:"veeba.png" },
+  { name:"yippee",       file:"yippee.png" },
+  { name:"zeeba",        file:"zeeba.png" },
 ];
 
-const N = BRANDS.length;
+const N      = BRANDS.length;
 const CARD_W = 1.2;
 const CARD_H = 1.7;
 const CARD_T = 0.015;
+const GAP    = 0.35; // card-centre spacing in carousel
 
 function SceneController() {
   const { scene, camera } = useThree();
   const fanContainerRef = useRef<THREE.Group>(null);
-  const pageGroupsRef = useRef<THREE.Group[]>([]);
+  const pageGroupsRef   = useRef<THREE.Group[]>([]);
   const [isCarouselMode, setIsCarouselMode] = useState(false);
-  const scrollX = useRef(0);
-  const targetScrollX = useRef(0);
+  const scrollX        = useRef(0);
+  const targetScrollX  = useRef(0);
+  const scrollVelocity = useRef(0);
 
+  // ── Build scene + run fan animation ──────────────────────────────────────
   useEffect(() => {
     const fanContainer = new THREE.Group();
-    fanContainer.position.set(0, 0, 0);
     scene.add(fanContainer);
     fanContainerRef.current = fanContainer;
 
-    const pageGroups: THREE.Group[] = [];
+    const pageGroups: THREE.Group[]              = [];
+    const cardMats:   THREE.MeshBasicMaterial[][] = [];
 
-    // Canvas texture: white bg + logo scaled to fill card width
+    // Canvas texture — white bg, logo scaled to fill card width
     const makeCardTextures = (url: string): [THREE.CanvasTexture, THREE.CanvasTexture] => {
       const PX_W = 512;
-      const PX_H = Math.round(PX_W * (CARD_H / CARD_W)); // ≈ 725
+      const PX_H = Math.round(PX_W * (CARD_H / CARD_W));
 
       const makeFace = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = PX_W;
+        canvas.width  = PX_W;
         canvas.height = PX_H;
         const ctx = canvas.getContext('2d')!;
         ctx.fillStyle = '#ffffff';
@@ -124,13 +127,11 @@ function SceneController() {
 
       const front = makeFace();
       const back  = makeFace();
-      // Canvas textures must be tagged sRGB or Three.js linearises them → washed out
       front.tex.colorSpace = THREE.SRGBColorSpace;
       back.tex.colorSpace  = THREE.SRGBColorSpace;
 
       const img = new Image();
       img.onload = () => {
-        // Scale logo to fill full card width; letterbox vertically on white
         const scale = PX_W / img.naturalWidth;
         const dh    = img.naturalHeight * scale;
         const dy    = (PX_H - dh) / 2;
@@ -140,7 +141,6 @@ function SceneController() {
         front.ctx.drawImage(img, 0, dy, PX_W, dh);
         front.tex.needsUpdate = true;
 
-        // Back face: mirror horizontally so it reads correctly when viewed from behind
         back.ctx.fillStyle = '#ffffff';
         back.ctx.fillRect(0, 0, PX_W, PX_H);
         back.ctx.save();
@@ -151,159 +151,184 @@ function SceneController() {
         back.tex.needsUpdate = true;
       };
       img.src = url;
-
       return [front.tex, back.tex];
     };
 
-    // Create page groups with meshes
+    // Build card meshes — start opacity 0 so nothing is visible before Phase 1
     for (let i = 0; i < N; i++) {
-      const brand = BRANDS[i];
-      const [frontTex, backTex] = makeCardTextures(`/logos/${brand.file}`);
+      const [frontTex, backTex] = makeCardTextures(`/logos/${BRANDS[i].file}`);
 
-      // Front face (+Z) — MeshBasicMaterial so it's never black regardless of lighting
-      const frontMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(CARD_W, CARD_H),
-        new THREE.MeshBasicMaterial({ map: frontTex })
-      );
+      const frontMat = new THREE.MeshBasicMaterial({ map: frontTex, transparent: true, opacity: 0 });
+      const backMat  = new THREE.MeshBasicMaterial({ map: backTex,  transparent: true, opacity: 0 });
+      const edgeMat  = new THREE.MeshBasicMaterial({ color: 0xf0ebe0, transparent: true, opacity: 0 });
+
+      const frontMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), frontMat);
       frontMesh.position.z = CARD_T / 2 + 0.001;
 
-      // Back face (-Z) — rotated π on Y so it faces away from camera
-      const backMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(CARD_W, CARD_H),
-        new THREE.MeshBasicMaterial({ map: backTex })
-      );
+      const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), backMat);
       backMesh.rotation.y = Math.PI;
       backMesh.position.z = -(CARD_T / 2 + 0.001);
 
-      // Thin card body (visible on edges during spin)
-      const edgeMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T),
-        new THREE.MeshBasicMaterial({ color: 0xf0ebe0 })
-      );
+      const edgeMesh = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T), edgeMat);
 
-      // Inner group offset so the LEFT edge sits at the pivot point (for fan rotation)
+      // Inner group: LEFT edge at pivot (x=0 of grp) so fan rotates around spine
       const inner = new THREE.Group();
       inner.position.x = CARD_W / 2;
       inner.add(frontMesh, backMesh, edgeMesh);
 
-      // Outer group — this is what the animation drives.
-      // All cards share z≈0 so the fan pivots from one common Z plane.
-      // A tiny unique offset prevents z-fighting while keeping them visually flush.
+      // Outer group: all share the same z≈0 plane so fan pivots from one point
       const grp = new THREE.Group();
       grp.position.z = -i * 0.001;
       grp.add(inner);
       fanContainer.add(grp);
 
       pageGroups.push(grp);
+      cardMats.push([frontMat, backMat, edgeMat]);
     }
 
     pageGroupsRef.current = pageGroups;
 
-    // Run animation timeline - simple intro to blade effect
-    const tl = gsap.timeline();
-    const centerIdx = (N - 1) / 2;
+    // ── GSAP timeline ─────────────────────────────────────────────────────
+    const tl        = gsap.timeline({ delay: 0.5 });
+    const centerIdx  = (N - 1) / 2;
+    const camState   = { y: camera.position.y, z: camera.position.z };
+    const updateCam  = () => {
+      camera.position.y = camState.y;
+      camera.position.z = camState.z;
+      (camera as THREE.PerspectiveCamera).lookAt(0, 0, 0);
+    };
 
-    // Phase 1: Reveal all cards in blade layout
+    // Phase 1 — first card fades in alone (0.9s)
+    tl.to(cardMats[0], { opacity: 1, duration: 0.9, ease: 'power2.out' });
+
+    // Phase 2 — rest of deck fades in while fan opens like a book (spine on left)
     tl.to(
-      pageGroups,
-      {
-        x: function(index: number) { return (index - centerIdx) * 0.35; },
-        y: 0,
-        z: 0,
-        opacity: 1,
-        rotationX: 0,
-        rotationY: function(index: number) {
-          const rel = index - centerIdx;
-          const angle = 0.7 + (0.87 * Math.exp(-Math.abs(rel) * 0.5));
-          return rel > 0 ? -angle : angle;
-        },
-        rotationZ: 0,
-        duration: 1.5,
-        stagger: 0.01,
-        ease: "power2.inOut",
-        onComplete: () => setIsCarouselMode(true)
-      }
+      cardMats.slice(1).flat(),
+      { opacity: 1, duration: 0.5, stagger: 0.006, ease: 'power1.out' },
+      '>'
     );
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: (i) => -(i / (N - 1)) * Math.PI * 0.85,
+        duration: 1.8,
+        stagger: 0.008,
+        ease: 'back.out(1.2)',
+      },
+      '<'
+    );
+
+    // Phase 3 — fan spins as one unit, camera rises to show top-down angle
+    tl.to(camState, { y: 2.2, z: 3.8, duration: 3.5, ease: 'power2.inOut', onUpdate: updateCam });
+    tl.to(fanContainer.rotation, { y: Math.PI * 4, duration: 3.5, ease: 'linear' }, '<');
+
+    // Phase 4 — camera returns, fan closes, cards spread horizontally
+    tl.to(camState, { y: 0.15, z: 5.8, duration: 1.4, ease: 'power2.inOut', onUpdate: updateCam });
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      { y: 0, z: 0, duration: 1.0, stagger: { each: 0.008, from: 'end' }, ease: 'power2.inOut' },
+      '<'
+    );
+    tl.to(
+      pageGroups.map(g => g.position),
+      {
+        x: (i) => (i - centerIdx) * GAP,
+        z: 0,
+        duration: 1.0,
+        stagger: { each: 0.006, from: 'center' },
+        ease: 'power3.inOut',
+      },
+      '<'
+    );
+
+    // Phase 5 — settle into blade fan (matches useFrame formula exactly so no jump on handoff)
+    tl.to(
+      pageGroups.map(g => g.rotation),
+      {
+        y: (i) => {
+          const rel  = i - centerIdx;
+          const dist = Math.abs(rel);
+          const ang  = 0.7 + 0.87 * Math.exp(-dist * 0.5);
+          return rel >= 0 ? -ang : ang;
+        },
+        x: 0,
+        z: 0,
+        duration: 1.0,
+        stagger: { each: 0.006, from: 'center' },
+        ease: 'power3.out',
+        onComplete: () => setIsCarouselMode(true),
+      },
+      '+=0.1'
+    );
+
+    return () => {
+      tl.kill();
+      scene.remove(fanContainer);
+    };
   }, [scene, camera]);
 
-  // Handle carousel scrolling with wheel and drag
+  // ── Wheel + pointer drag listeners ───────────────────────────────────────
   useEffect(() => {
     if (!isCarouselMode) return;
 
-    const handleWheel = (e: WheelEvent) => {
-      // Standardize horizontal scroll
-      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      targetScrollX.current -= delta * 0.001; // Adjust sensitivity
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const px  = e.deltaMode === 1 ? raw * 30 : raw; // DOM_DELTA_LINE → pixels
+      targetScrollX.current += px * 0.004;
     };
 
-    // Add drag support
-    let isDragging = false;
-    let startX = 0;
-    const handleDown = (e: PointerEvent) => { isDragging = true; startX = e.clientX; };
-    const handleMove = (e: PointerEvent) => {
-      if (!isDragging) return;
-      const dx = e.clientX - startX;
-      targetScrollX.current += dx * 0.005;
-      startX = e.clientX;
+    let dragging = false, lastX = 0;
+    const onPointerDown = (e: PointerEvent) => { dragging = true; lastX = e.clientX; };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      // += so drag direction matches natural "pull the deck" feel
+      targetScrollX.current += (e.clientX - lastX) * 0.008;
+      lastX = e.clientX;
     };
-    const handleUp = () => { isDragging = false; };
+    const onPointerUp = () => { dragging = false; };
 
-    window.addEventListener('wheel', handleWheel);
-    window.addEventListener('pointerdown', handleDown);
-    window.addEventListener('pointermove', handleMove);
-    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('wheel',       onWheel,       { passive: false });
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup',   onPointerUp);
     return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('pointerdown', handleDown);
-      window.removeEventListener('pointermove', handleMove);
-      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('wheel',       onWheel);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup',   onPointerUp);
     };
   }, [isCarouselMode]);
 
-  // Update carousel positions with blade effect
-  useFrame((state) => {
+  // ── Per-frame carousel update ─────────────────────────────────────────────
+  useFrame(() => {
     if (!isCarouselMode || !pageGroupsRef.current) return;
 
-    // 1. Smoothly interpolate scroll
-    scrollX.current += (targetScrollX.current - scrollX.current) * 0.1;
+    // Spring physics — underdamped so there is a slight overshoot on release
+    scrollVelocity.current += (targetScrollX.current - scrollX.current) * 0.06;
+    scrollVelocity.current *= 0.82;
+    scrollX.current += scrollVelocity.current;
 
-    const N = pageGroupsRef.current.length;
-    const centerX = (N - 1) / 2;
+    const vel       = scrollVelocity.current;
+    const centerIdx = (N - 1) / 2;
 
-    pageGroupsRef.current.forEach((group, i) => {
-      // Calculate distance from viewport center
-      // relX = 0 means the card is perfectly in the middle
-      const relX = (i - centerX) + scrollX.current;
+    pageGroupsRef.current.forEach((grp, i) => {
+      // relX: card's position relative to screen centre in card-index units
+      const relX = (i - centerIdx) + scrollX.current / GAP;
 
-      // --- POSITION (Straight Horizontal Line) ---
-      group.position.x = relX * 0.35; // Tightly packed blades
-      group.position.z = 0; // Keep them on a flat line
-      group.position.y = 0;
+      // Strictly horizontal — no y or z bobbing
+      grp.position.x = relX * GAP;
+      grp.position.y = 0;
+      grp.position.z = 0;
 
-      // --- ROTATION (The Blade Effect) ---
+      // Blade fan: spine at centre (≈90°), face opens as card moves to edge
       const dist = Math.abs(relX);
-      
-      // We want 90 degrees (1.57 rad) at center, 40 degrees (0.7 rad) at edges
-      // We use an exponential decay so the "unfolding" happens smoothly
-      const baseAngle = 0.7; // The "Outer State" (approx 40 degrees)
-      const centerBonus = 0.87 * Math.exp(-dist * 0.5); // Adds extra rotation in the center
-      const finalAngle = baseAngle + centerBonus;
+      const ang  = 0.7 + 0.87 * Math.exp(-dist * 0.5);
+      grp.rotation.y = relX >= 0 ? -ang : ang;
 
-      // Apply the rotation (Left cards face right, Right cards face left)
-      group.rotation.y = relX > 0 ? -finalAngle : finalAngle;
-
-      // --- THE SWAYING MOTION ---
-      // A: Sway based on movement speed (tilts the blades as you drag)
-      const velocity = (targetScrollX.current - scrollX.current);
-      const movementSway = velocity * 1.5;
-      
-      // B: Passive swaying (organic breathing)
-      const passiveSway = Math.sin(state.clock.elapsedTime * 1.5 + i * 0.5) * 0.03;
-      
-      group.rotation.z = movementSway + passiveSway;
-      
-      // Slight X-axis tilt for perspective
-      group.rotation.x = Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.02;
+      // Gentle lean into scroll direction — no x-tilt, no oscillation
+      grp.rotation.x = 0;
+      grp.rotation.z = -vel * 0.05;
     });
   });
 
