@@ -113,8 +113,8 @@ function SceneController() {
     const tl = gsap.timeline();
     const cameraState = { y: 0.15, z: 5.8 };
 
-    // Phase 1: Reveal first card only
-    tl.to(pageMats[0], { opacity: 1, duration: 0.5 });
+    // Phase 1: Reveal all cards
+    tl.to(pageMats, { opacity: 1, duration: 0.6, stagger: 0.02 });
 
     // Phase 2: Fan open (rotate around Y-axis)
     tl.to(
@@ -125,7 +125,7 @@ function SceneController() {
         ease: "back.out(1.5)",
         stagger: 0.05,
       },
-      "+=0.2"
+      "<"
     );
 
     // Phase 3: Camera moves up to 45-degree angle during spin
@@ -142,7 +142,7 @@ function SceneController() {
           camera.lookAt(0, 0, 0);
         },
       },
-      "+=0.1"
+      "<"
     );
 
     // Spin around Y-axis (not X)
