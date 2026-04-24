@@ -48,57 +48,87 @@ function SceneController() {
     fanContainerRef.current = fanContainer;
 
     const pageGroups: THREE.Group[] = [];
-    const textureLoader = new THREE.TextureLoader();
+
+    // Canvas texture: white bg + logo scaled to fill card width
+    const makeCardTextures = (url: string): [THREE.CanvasTexture, THREE.CanvasTexture] => {
+      const PX_W = 512;
+      const PX_H = Math.round(PX_W * (CARD_H / CARD_W)); // ≈ 725
+
+      const makeFace = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = PX_W;
+        canvas.height = PX_H;
+        const ctx = canvas.getContext('2d')!;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, PX_W, PX_H);
+        return { canvas, ctx, tex: new THREE.CanvasTexture(canvas) };
+      };
+
+      const front = makeFace();
+      const back  = makeFace();
+
+      const img = new Image();
+      img.onload = () => {
+        // Scale logo to fill full card width; letterbox vertically on white
+        const scale = PX_W / img.naturalWidth;
+        const dh    = img.naturalHeight * scale;
+        const dy    = (PX_H - dh) / 2;
+
+        front.ctx.fillStyle = '#ffffff';
+        front.ctx.fillRect(0, 0, PX_W, PX_H);
+        front.ctx.drawImage(img, 0, dy, PX_W, dh);
+        front.tex.needsUpdate = true;
+
+        // Back face: mirror horizontally so it reads correctly when viewed from behind
+        back.ctx.fillStyle = '#ffffff';
+        back.ctx.fillRect(0, 0, PX_W, PX_H);
+        back.ctx.save();
+        back.ctx.translate(PX_W, 0);
+        back.ctx.scale(-1, 1);
+        back.ctx.drawImage(img, 0, dy, PX_W, dh);
+        back.ctx.restore();
+        back.tex.needsUpdate = true;
+      };
+      img.src = url;
+
+      return [front.tex, back.tex];
+    };
 
     // Create page groups with meshes
     for (let i = 0; i < N; i++) {
       const brand = BRANDS[i];
-      
-      // Load texture from local logos folder
-      const logoUrl = `/logos/${brand.file}`;
+      const [frontTex, backTex] = makeCardTextures(`/logos/${brand.file}`);
 
-      // Create materials first (will update when textures load)
-      const frontMat = new THREE.MeshStandardMaterial({
-        transparent: true,
-        side: THREE.FrontSide,
-        color: 0xffffff,
-      });
-      
-      const backMat = new THREE.MeshStandardMaterial({
-        transparent: true,
-        side: THREE.BackSide,
-        color: 0xffffff,
-      });
-      
-      const sideMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        transparent: true,
-      });
+      // Front face (+Z) — MeshBasicMaterial so it's never black regardless of lighting
+      const frontMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(CARD_W, CARD_H),
+        new THREE.MeshBasicMaterial({ map: frontTex })
+      );
+      frontMesh.position.z = CARD_T / 2 + 0.001;
 
-      // Load front texture and update material when ready
-      textureLoader.load(logoUrl, (texture) => {
-        texture.flipY = true;
-        frontMat.map = texture;
-        frontMat.needsUpdate = true;
-      });
+      // Back face (-Z) — rotated π on Y so it faces away from camera
+      const backMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(CARD_W, CARD_H),
+        new THREE.MeshBasicMaterial({ map: backTex })
+      );
+      backMesh.rotation.y = Math.PI;
+      backMesh.position.z = -(CARD_T / 2 + 0.001);
 
-      // Load back texture and update material when ready
-      textureLoader.load(logoUrl, (texture) => {
-        texture.flipY = true;
-        backMat.map = texture;
-        backMat.needsUpdate = true;
-      });
+      // Thin card body (visible on edges during spin)
+      const edgeMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T),
+        new THREE.MeshBasicMaterial({ color: 0xf0ebe0 })
+      );
 
-      // Create geometry and mesh
-      const geometry = new THREE.BoxGeometry(CARD_W, CARD_H, CARD_T);
-      const materials = [sideMat, sideMat, sideMat, sideMat, frontMat, backMat];
-      const mesh = new THREE.Mesh(geometry, materials);
-      mesh.position.x = CARD_W / 2;
+      // Inner group offset so the LEFT edge sits at the pivot point (for fan rotation)
+      const inner = new THREE.Group();
+      inner.position.x = CARD_W / 2;
+      inner.add(frontMesh, backMesh, edgeMesh);
 
-      // Create group with proper pivot
+      // Outer group — this is what the animation drives
       const grp = new THREE.Group();
       grp.position.z = (N - i) * 0.02;
-      grp.add(mesh);
+      grp.add(inner);
       fanContainer.add(grp);
 
       pageGroups.push(grp);
