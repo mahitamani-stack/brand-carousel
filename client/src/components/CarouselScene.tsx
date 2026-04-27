@@ -202,13 +202,13 @@ function SceneController() {
     // Phase 1 — first card fades in alone (0.9s)
     tl.to(cardMats[0], { opacity: 1, duration: 0.9, ease: 'power2.out' });
 
-    // Phase 2 — rest of deck fades in while fan opens like a book (spine on left)
+        // Phase 2 — fan opens + camera begins rising
     tl.to(
-            cardMats.slice(1, ANIM_CARDS).flat(),
+      cardMats.slice(1, ANIM_CARDS).flat(),
       { opacity: 1, duration: 0.5, stagger: 0.006, ease: 'power1.out' },
       '>'
     );
-        tl.to(
+    tl.to(
       pageGroups.slice(0, ANIM_CARDS).map(g => g.rotation),
       {
         y: (i) => -(i / (ANIM_CARDS - 1)) * Math.PI * 0.85,
@@ -218,27 +218,30 @@ function SceneController() {
       },
       '<'
     );
+    tl.to(camState, { y: 1.0, z: 4.8, duration: 1.8, ease: 'power2.inOut', onUpdate: updateCam }, '<');
 
-    // Phase 3 — fan spins as one unit, camera rises to show top-down angle
+    // Phase 3 — fan spins; camera completes rise to top-down angle
     tl.to(camState, { y: 2.2, z: 3.8, duration: 3.5, ease: 'power2.inOut', onUpdate: updateCam });
     tl.to(fanContainer.rotation, { y: Math.PI * 4, duration: 3.5, ease: 'linear' }, '<');
 
-    // Phase 4a — camera returns and 20 fan cards collapse back into one stack
-    tl.to(camState, { y: 0.15, z: 5.8, duration: 1.4, ease: 'power2.inOut', onUpdate: updateCam });
+    // Phase 4a — camera returns; dim cards during collapse to hide back-face logos
+    tl.to(cardMats.flat(), { opacity: 0.1, duration: 0.4, ease: 'power2.out' });
+    tl.to(camState, { y: 0.15, z: 5.8, duration: 1.4, ease: 'power2.inOut', onUpdate: updateCam }, '<');
     tl.to(
       pageGroups.slice(0, ANIM_CARDS).map(g => g.rotation),
       { y: 0, z: 0, duration: 1.0, stagger: { each: 0.008, from: 'end' }, ease: 'power2.inOut' },
       '<'
     );
 
-    // Phase 4b — remaining cards materialise in the collapsed stack
+    // Phase 4b — restore opacity; materialise any remaining cards
+    tl.to(cardMats.flat(), { opacity: 1, duration: 0.4, ease: 'power2.out' }, '>-0.2');
     tl.to(
       cardMats.slice(ANIM_CARDS).flat(),
       { opacity: 1, duration: 0.3, ease: 'power2.out' },
-      '>'
+      '<'
     );
 
-    // Phase 4c — all cards spread horizontally from the stack
+    // Phase 4c — spread from stack sideways AND rotate into blade fan simultaneously
     tl.to(
       pageGroups.map(g => g.position),
       {
@@ -250,15 +253,13 @@ function SceneController() {
       },
       '>'
     );
-
-    // Phase 5 — settle into blade fan (matches useFrame formula exactly so no jump on handoff)
     tl.to(
       pageGroups.map(g => g.rotation),
       {
         y: (i) => {
           const rel  = i - centerIdx;
           const dist = Math.abs(rel);
-          const ang  = 0.7 + 0.87 * Math.exp(-dist * 0.5);
+          const ang  = 0.45 + 1.12 * Math.exp(-dist * dist * 0.04);
           return rel >= 0 ? -ang : ang;
         },
         x: 0,
@@ -268,7 +269,7 @@ function SceneController() {
         ease: 'power3.out',
         onComplete: () => setIsCarouselMode(true),
       },
-      '+=0.1'
+      '<'
     );
 
     return () => {
@@ -333,10 +334,10 @@ const relX = ((rawRelX + N / 2) % N + N) % N - N / 2;
       grp.position.z = 0;
 
       // Blade fan: spine at centre (≈90°), face opens as card moves to edge
-      const dist = Math.abs(relX);
-      const ang  = 0.7 + 0.87 * Math.exp(-dist * 0.5);
+            const dist = Math.abs(relX);
+      const ang  = 0.45 + 1.12 * Math.exp(-dist * dist * 0.04);
       grp.rotation.y = relX >= 0 ? -ang : ang;
-
+      
       // Gentle lean into scroll direction — no x-tilt, no oscillation
       grp.rotation.x = 0;
       grp.rotation.z = -vel * 0.05;
