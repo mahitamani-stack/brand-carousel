@@ -314,7 +314,8 @@ function SceneController() {
 
     pageGroupsRef.current.forEach((grp, i) => {
       // relX: card's position relative to screen centre in card-index units
-      const relX = (i - centerIdx) + scrollX.current / GAP;
+      const rawRelX = (i - centerIdx) + scrollX.current / GAP;
+const relX = ((rawRelX + N / 2) % N + N) % N - N / 2;
 
       // Strictly horizontal — no y or z bobbing
       grp.position.x = relX * GAP;
