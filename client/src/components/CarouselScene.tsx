@@ -349,7 +349,7 @@ const relX = ((rawRelX + N / 2) % N + N) % N - N / 2;
 
 export function CarouselScene() {
   return (
-    <Canvas style={{ width: '100%', height: '100vh' }}>
+        <Canvas style={{ width: '100%', height: '500px' }}>
       <PerspectiveCamera position={[0, 0.15, 5.8]} fov={52} makeDefault />
       <ambientLight intensity={1.2} />
       <directionalLight position={[5, 10, 5]} intensity={0.8} />
