@@ -88,10 +88,10 @@ const BRANDS = [
 
 const N          = BRANDS.length;
 const ANIM_CARDS = 20; // cards visible during fan animation; rest appear once stack collapses
-const CARD_W = 1.2;
-const CARD_H = 1.7;
+const CARD_W = 0.55;
+const CARD_H = 1.0;
 const CARD_T = 0.015;
-const GAP    = 0.80; // card-centre spacing in carousel
+const GAP    = 0.40; // card-centre spacing in carousel
 
 function SceneController() {
   const { scene, camera } = useThree();
@@ -349,7 +349,7 @@ const relX = ((rawRelX + N / 2) % N + N) % N - N / 2;
 export function CarouselScene() {
   return (
     <Canvas style={{ width: '100%', height: '100vh' }}>
-      <PerspectiveCamera position={[0, 0.15, 5.8]} fov={42} makeDefault />
+      <PerspectiveCamera position={[0, 0.15, 5.8]} fov={52} makeDefault />
       <ambientLight intensity={1.2} />
       <directionalLight position={[5, 10, 5]} intensity={0.8} />
       <SceneController />
