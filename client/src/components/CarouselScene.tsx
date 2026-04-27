@@ -86,11 +86,12 @@ const BRANDS = [
   { name:"zeeba",        file:"zeeba.png" },
 ];
 
-const N      = BRANDS.length;
+const N          = BRANDS.length;
+const ANIM_CARDS = 20; // cards visible during fan animation; rest appear once stack collapses
 const CARD_W = 1.2;
 const CARD_H = 1.7;
 const CARD_T = 0.015;
-const GAP    = 0.35; // card-centre spacing in carousel
+const GAP    = 0.60; // card-centre spacing in carousel
 
 function SceneController() {
   const { scene, camera } = useThree();
@@ -203,14 +204,14 @@ function SceneController() {
 
     // Phase 2 — rest of deck fades in while fan opens like a book (spine on left)
     tl.to(
-      cardMats.slice(1).flat(),
+            cardMats.slice(1, ANIM_CARDS).flat(),
       { opacity: 1, duration: 0.5, stagger: 0.006, ease: 'power1.out' },
       '>'
     );
-    tl.to(
-      pageGroups.map(g => g.rotation),
+        tl.to(
+      pageGroups.slice(0, ANIM_CARDS).map(g => g.rotation),
       {
-        y: (i) => -(i / (N - 1)) * Math.PI * 0.85,
+        y: (i) => -(i / (ANIM_CARDS - 1)) * Math.PI * 0.85,
         duration: 1.8,
         stagger: 0.008,
         ease: 'back.out(1.2)',
@@ -222,13 +223,22 @@ function SceneController() {
     tl.to(camState, { y: 2.2, z: 3.8, duration: 3.5, ease: 'power2.inOut', onUpdate: updateCam });
     tl.to(fanContainer.rotation, { y: Math.PI * 4, duration: 3.5, ease: 'linear' }, '<');
 
-    // Phase 4 — camera returns, fan closes, cards spread horizontally
+    // Phase 4a — camera returns and 20 fan cards collapse back into one stack
     tl.to(camState, { y: 0.15, z: 5.8, duration: 1.4, ease: 'power2.inOut', onUpdate: updateCam });
     tl.to(
-      pageGroups.map(g => g.rotation),
+      pageGroups.slice(0, ANIM_CARDS).map(g => g.rotation),
       { y: 0, z: 0, duration: 1.0, stagger: { each: 0.008, from: 'end' }, ease: 'power2.inOut' },
       '<'
     );
+
+    // Phase 4b — remaining cards materialise in the collapsed stack
+    tl.to(
+      cardMats.slice(ANIM_CARDS).flat(),
+      { opacity: 1, duration: 0.3, ease: 'power2.out' },
+      '>'
+    );
+
+    // Phase 4c — all cards spread horizontally from the stack
     tl.to(
       pageGroups.map(g => g.position),
       {
@@ -238,7 +248,7 @@ function SceneController() {
         stagger: { each: 0.006, from: 'center' },
         ease: 'power3.inOut',
       },
-      '<'
+      '>'
     );
 
     // Phase 5 — settle into blade fan (matches useFrame formula exactly so no jump on handoff)
