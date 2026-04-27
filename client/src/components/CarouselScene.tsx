@@ -91,7 +91,7 @@ const ANIM_CARDS = 20; // cards visible during fan animation; rest appear once s
 const CARD_W = 1.2;
 const CARD_H = 1.7;
 const CARD_T = 0.015;
-const GAP    = 0.60; // card-centre spacing in carousel
+const GAP    = 0.80; // card-centre spacing in carousel
 
 function SceneController() {
   const { scene, camera } = useThree();
