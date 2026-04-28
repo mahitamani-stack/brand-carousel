@@ -8,7 +8,7 @@ export default function Home() {
           Our <em>Clients</em>
         </h1>
       </div>
-           <div style={{ marginTop: '-90px' }}>
+           <div style={{ marginTop: '-70px' }}>
         <CarouselScene />
       </div> 
     </div>
